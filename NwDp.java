@@ -2,12 +2,12 @@ public class NwDp {
     private static final int MATCH_SCORE = 3;
     private static final int MISMATCH_SCORE = -2;
     private static final int GAP_PENALTY = -4;
-
+    
     public static class AlignmentResult {
         public final String alignment1;
         public final String alignment2;
         public final int score;
-
+        
         public AlignmentResult(String alignment1, String alignment2, int score) {
             this.alignment1 = alignment1;
             this.alignment2 = alignment2;
@@ -15,12 +15,6 @@ public class NwDp {
         }
     }
 
-    /**
-     * Computes the optimal global alignment score using the Needleman-Wunsch algorithm
-     * @param seq1 First sequence
-     * @param seq2 Second sequence
-     * @return Optimal alignment score
-     */
     public static AlignmentResult computeAlignment(String seq1, String seq2) {
         int m = seq1.length();
         int n = seq2.length();
@@ -42,7 +36,7 @@ public class NwDp {
                 int match = dp[i-1][j-1] + getScore(seq1.charAt(i-1), seq2.charAt(j-1));
                 int delete = dp[i-1][j] + GAP_PENALTY;
                 int insert = dp[i][j-1] + GAP_PENALTY;
-
+                
                 dp[i][j] = Math.max(Math.max(match, delete), insert);
 
                 if (dp[i][j] == match) {
@@ -57,10 +51,10 @@ public class NwDp {
 
         StringBuilder align1 = new StringBuilder();
         StringBuilder align2 = new StringBuilder();
-
+        
         int i = m;
         int j = n;
-
+        
         while (i > 0 || j > 0) {
             if (i > 0 && j > 0 && backtrack[i][j] == 'D') {
                 align1.insert(0, seq1.charAt(i-1));
@@ -76,26 +70,20 @@ public class NwDp {
                 j--;
             }
         }
-
+        
         return new AlignmentResult(align1.toString(), align2.toString(), dp[m][n]);
     }
 
-    /**
-     * Returns the score for matching two characters
-     * @param a First character
-     * @param b Second character
-     * @return Score based on match/mismatch
-     */
     private static int getScore(char a, char b) {
         return a == b ? MATCH_SCORE : MISMATCH_SCORE;
     }
-
+    
     public static void main(String[] args) {
         String signal = "TATAAT";
         String sequence = "TTACGTAAGC";
-
+        
         AlignmentResult result = computeAlignment(signal, sequence);
-
+        
         System.out.println("Aligning -10 signal TATAAT with sequence TTACGTAAGC");
         System.out.println("Optimal alignment score: " + result.score);
         System.out.println("Alignment:");
@@ -113,4 +101,3 @@ public class NwDp {
         System.out.println(markers.toString());
     }
 }
-

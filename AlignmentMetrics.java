@@ -43,7 +43,6 @@ public class AlignmentMetrics {
     }
 
     private static Alignment[] loadAlignments(String filename) throws Exception {
-        // First count number of alignments
         int alignmentCount = 0;
         FileInputStream fis = new FileInputStream(filename);
         InputStreamReader reader = new InputStreamReader(fis);
@@ -55,11 +54,9 @@ public class AlignmentMetrics {
         reader.close();
         fis.close();
 
-        // Create array to hold alignments
         Alignment[] alignments = new Alignment[alignmentCount];
         int currentAlignment = 0;
 
-        // Read file again to load alignments
         fis = new FileInputStream(filename);
         reader = new InputStreamReader(fis);
         String header = null;
@@ -93,18 +90,18 @@ public class AlignmentMetrics {
                     String seq = parts[1].trim();
                     
                     switch (lineCount) {
-                        case 0: // Template sequence
+                        case 0:
                             templateId = id;
                             templateSeq = seq;
                             break;
-                        case 1: // Target sequence
+                        case 1:
                             targetId = id;
                             targetSeq = seq;
                             break;
-                        case 2: // Reference template sequence
+                        case 2:
                             refTemplateSeq = seq;
                             break;
-                        case 3: // Reference target sequence
+                        case 3:
                             refTargetSeq = seq;
                             break;
                     }
@@ -114,8 +111,7 @@ public class AlignmentMetrics {
                 sb.append(ch);
             }
         }
-        
-        // Add last alignment
+
         if (header != null) {
             alignments[currentAlignment] = new Alignment(header, score, templateId, targetId,
                                                        templateSeq, targetSeq, refTemplateSeq, refTargetSeq);
@@ -134,8 +130,7 @@ public class AlignmentMetrics {
         double totalShift = 0;
         double totalInverseShift = 0;
 
-        // Convert sequences to arrays of indices (ignoring gaps)
-        int[] pred1Indices = new int[predSeq1.length() + 1];
+        int[] pred1Indices = new int[predSeq1.length() + 1]; //index ohne gaps
         int[] pred2Indices = new int[predSeq2.length() + 1];
         int[] ref1Indices = new int[refSeq1.length() + 1];
         int[] ref2Indices = new int[refSeq2.length() + 1];
@@ -152,7 +147,6 @@ public class AlignmentMetrics {
             if (refSeq2.charAt(i) != '-') ref2Indices[ref2Count++] = i;
         }
 
-        // Create alignment maps for quick lookup
         boolean[][] predAligned = new boolean[pred1Count][pred2Count];
         boolean[][] refAligned = new boolean[ref1Count][ref2Count];
         char[] TargetNoGaps = new char[refSeq2.length()];
@@ -178,8 +172,7 @@ public class AlignmentMetrics {
                 }
             }
         }
-        
-        // Mark aligned positions in reference
+
         for (int i = 0; i < ref1Count; i++) {
             for (int j = 0; j < ref2Count; j++) {
                 if (ref1Indices[i] == ref2Indices[j]) {
@@ -188,16 +181,13 @@ public class AlignmentMetrics {
             }
         }
 
-        // Count metrics and calculate shifts
         for (int i = 0; i < pred1Count; i++) {
             for (int j = 0; j < pred2Count; j++) {
                 if (predAligned[i][j]) {
                     if (i < ref1Count && j < ref2Count && refAligned[i][j]) {
                         tp++;
-                        // Calculate shift for template sequence (predSeq1 and refSeq1)
                         int templateShift = Math.abs(pred1Indices[i] - ref1Indices[i]);
                         totalShift += templateShift;
-                        // Calculate shift for target sequence (predSeq2 and refSeq2)
                         int targetShift = Math.abs(pred2Indices[j] - ref2Indices[j]);
                         totalInverseShift += targetShift;
                     } else {
@@ -207,7 +197,6 @@ public class AlignmentMetrics {
             }
         }
 
-        // Count false negatives
         for (int i = 0; i < ref1Count; i++) {
             for (int j = 0; j < ref2Count; j++) {
                 if (refAligned[i][j]) {
@@ -298,7 +287,6 @@ public class AlignmentMetrics {
         }
         double meanShiftError = countShift > 0 ? totalShift / countShift : 0;
 
-        // Berechne inverse mean shift error (für Target-Sequenzen)
         int[] refTargetAliChar = new int[TargetNoGaps.length];
         int[] predTargetAliChar = new int[TargetNoGaps.length];
         for (int i = 0; i < TargetNoGaps.length; i++) {
@@ -412,8 +400,7 @@ public class AlignmentMetrics {
                     alignment.templateSeq, alignment.targetSeq,
                     alignment.refTemplateSeq, alignment.refTargetSeq
                 );
-                
-                // Print header with scores
+
                 System.out.printf(">%s %.4f %.4f %.4f %.4f %.4f %.4f%n",
                     alignment.header,
                     alignment.originalScore,
@@ -423,8 +410,7 @@ public class AlignmentMetrics {
                     metrics.meanShiftError,
                     metrics.inverseMeanShiftError
                 );
-                
-                // Print alignments
+
                 System.out.printf("%s: %s%n", alignment.templateId, alignment.templateSeq);
                 System.out.printf("%s: %s%n", alignment.targetId, alignment.targetSeq);
                 System.out.printf("%s: %s%n", alignment.templateId, alignment.refTemplateSeq);

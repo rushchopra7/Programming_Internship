@@ -11,8 +11,8 @@ public class AlignmentAlgorithm {
 
     public class GotohMatrices {
         double[][] M;
-        double[][] E;
-        double[][] F;
+        double[][] E; //2
+        double[][] F; //1
         int[][] backtrack;
         
         GotohMatrices(int m, int n) {
@@ -20,8 +20,7 @@ public class AlignmentAlgorithm {
             E = new double[m + 1][n + 1];
             F = new double[m + 1][n + 1];
             backtrack = new int[m + 1][n + 1];
-            
-            // Initialize with negative infinity
+
             for (int i = 0; i <= m; i++) {
                 for (int j = 0; j <= n; j++) {
                     E[i][j] = Double.NEGATIVE_INFINITY;
@@ -71,17 +70,17 @@ public class AlignmentAlgorithm {
         GotohMatrices matrices = new GotohMatrices(m, n);
 
         matrices.M[0][0] = 0;
-        for (int i = 1; i <= m; i++) {
+        for (int i = 1; i <= m; i++) { //spalten
             matrices.M[i][0] = gapOpenPenalty + i * gapExtendPenalty;
             matrices.F[i][0] = matrices.M[i][0];
             matrices.E[i][0] = Double.NEGATIVE_INFINITY;
-            matrices.backtrack[i][0] = 1;  // Up
+            matrices.backtrack[i][0] = 1;
         }
-        for (int j = 1; j <= n; j++) {
+        for (int j = 1; j <= n; j++) { //zeilen
             matrices.M[0][j] = gapOpenPenalty + j * gapExtendPenalty;
             matrices.E[0][j] = matrices.M[0][j];
             matrices.F[0][j] = Double.NEGATIVE_INFINITY;
-            matrices.backtrack[0][j] = 2;  // Left
+            matrices.backtrack[0][j] = 2;
         }
 
         for (int i = 1; i <= m; i++) {
@@ -319,7 +318,6 @@ public class AlignmentAlgorithm {
         int i = maxI, j = maxJ;
         String currentMatrix = "M";
 
-        // First, build the local alignment
         while (i > 0 && j > 0) {
             if (currentMatrix.equals("M")) {
                 if (Math.abs(matrices.M[i][j] - matrices.F[i][j]) < 0.0001) {
@@ -365,39 +363,32 @@ public class AlignmentAlgorithm {
             }
         }
 
-        // Add the complete sequences with gaps
         StringBuilder completeAlign1 = new StringBuilder();
         StringBuilder completeAlign2 = new StringBuilder();
 
-        // Add leading part of seq1
         if (i > 0) {
             completeAlign1.append(seq1.substring(0, i));
             completeAlign2.append("-".repeat(i));
         }
 
-        // Add the local alignment
         completeAlign1.append(align1);
         completeAlign2.append(align2);
 
-        // Add trailing part of seq1
         if (maxI < seq1.length()) {
             completeAlign1.append(seq1.substring(maxI));
             completeAlign2.append("-".repeat(seq1.length() - maxI));
         }
 
-        // Add leading part of seq2
         if (j > 0) {
             completeAlign1.insert(0, "-".repeat(j));
             completeAlign2.insert(0, seq2.substring(0, j));
         }
 
-        // Add trailing part of seq2
         if (maxJ < seq2.length()) {
             completeAlign1.append("-".repeat(seq2.length() - maxJ));
             completeAlign2.append(seq2.substring(maxJ));
         }
 
-        // Ensure both sequences have the same length
         int maxLength = Math.max(completeAlign1.length(), completeAlign2.length());
         while (completeAlign1.length() < maxLength) {
             completeAlign1.append("-");

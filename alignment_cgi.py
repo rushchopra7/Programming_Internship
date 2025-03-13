@@ -8,10 +8,8 @@ import json
 import mysql.connector
 from pathlib import Path
 
-# Enable CGI error reporting
 cgitb.enable()
 
-# HTML template with embedded CSS and JavaScript
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -266,7 +264,7 @@ HTML_TEMPLATE = """
                 <input type="number" name="gap_extend" id="gap_extend" value="-1" step="0.1">
             </div>
 
-            <button type="submit">Run Alignment</button>
+                <button type="submit">Run Alignment</button>
         </form>
 
         <div id="loading" class="loading">
@@ -281,28 +279,23 @@ HTML_TEMPLATE = """
     </div>
 
     <script>
-        // Handle sequence source selection
         document.querySelectorAll('.sequence-source').forEach(select => {
             select.addEventListener('change', function() {
                 const target = this.dataset.target;
                 const value = this.value;
 
-                // Hide all input sections for this sequence
                 ['paste', 'database', 'upload'].forEach(type => {
                     const section = document.getElementById(`${target}-${type}`);
                     section.classList.remove('active');
                 });
 
-                // Show selected input section
                 const selectedSection = document.getElementById(`${target}-${value}`);
                 selectedSection.classList.add('active');
             });
 
-            // Trigger change event to set initial state
             select.dispatchEvent(new Event('change'));
         });
 
-        // Handle algorithm mode updates
         function updateModeOptions() {
             const algorithm = document.getElementById('algorithm').value;
             const modeSelect = document.getElementById('mode');
@@ -330,7 +323,6 @@ HTML_TEMPLATE = """
         document.getElementById('algorithm').addEventListener('change', updateModeOptions);
         updateModeOptions();
 
-        // Handle form submission
         document.getElementById('alignmentForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -416,7 +408,6 @@ HTML_TEMPLATE = """
 
 
 def get_db_connection():
-    """Create database connection"""
     try:
         conn = mysql.connector.connect(
             host="mysql2-ext.bio.ifi.lmu.de",
@@ -431,7 +422,6 @@ def get_db_connection():
 
 
 def calculate_alignment_metrics(seq1_aligned, seq2_aligned):
-    """Calculate alignment metrics similar to the validation file"""
     if not seq1_aligned or not seq2_aligned:
         return {
             "sensitivity": 0.0,
@@ -441,18 +431,15 @@ def calculate_alignment_metrics(seq1_aligned, seq2_aligned):
             "inverse_mean_shift_error": 0.0
         }
 
-    # Calculate aligned positions
     aligned_positions = []
     for i in range(len(seq1_aligned)):
         if seq1_aligned[i] != '-' and seq2_aligned[i] != '-':
             aligned_positions.append(i)
 
-    # Calculate coverage
     total_length = max(len(seq1_aligned.replace('-', '')), len(seq2_aligned.replace('-', '')))
     aligned_length = len(aligned_positions)
     coverage = aligned_length / total_length if total_length > 0 else 0.0
 
-    # Calculate mean shift error
     shifts = []
     for i in range(len(aligned_positions) - 1):
         shift = aligned_positions[i + 1] - aligned_positions[i]
@@ -462,8 +449,8 @@ def calculate_alignment_metrics(seq1_aligned, seq2_aligned):
     inverse_mean_shift_error = 1.0 / mean_shift_error if mean_shift_error > 0 else 0.0
 
     return {
-        "sensitivity": coverage,  # Simplified approximation
-        "specificity": coverage,  # Simplified approximation
+        "sensitivity": coverage,
+        "specificity": coverage,
         "coverage": coverage,
         "mean_shift_error": mean_shift_error,
         "inverse_mean_shift_error": inverse_mean_shift_error
@@ -471,7 +458,6 @@ def calculate_alignment_metrics(seq1_aligned, seq2_aligned):
 
 
 def create_backtrack_matrix_html(seq1, seq2, matrix_data):
-    """Create HTML visualization of the backtracking matrix"""
     if not matrix_data:
         return "No matrix available."
 
@@ -512,12 +498,10 @@ def create_backtrack_matrix_html(seq1, seq2, matrix_data):
                 <th></th>
     """
 
-    # Add sequence 2 as column headers
     for char in seq2:
         html += f"<th>{char}</th>"
     html += "</tr>"
 
-    # Add matrix rows with sequence 1 as row headers
     for i, header in enumerate(['-'] + list(seq1)):
         html += "<tr>"
         if i == 0:
@@ -540,11 +524,6 @@ def create_backtrack_matrix_html(seq1, seq2, matrix_data):
 
 
 def create_colored_alignment_html(seq1_aligned, seq2_aligned):
-    """Create an HTML snippet with colored alignment:
-       - Blue for matches (non-gap characters that are equal)
-       - Red for mismatches (non-gap characters that differ)
-       - Gaps are left uncolored.
-    """
     html = '<div style="font-family: monospace; white-space: pre;">'
     colored_line1 = ""
     colored_line2 = ""
@@ -556,7 +535,6 @@ def create_colored_alignment_html(seq1_aligned, seq2_aligned):
             colored_line1 += f'<span style="color: red;">{a}</span>'
             colored_line2 += f'<span style="color: red;">{b}</span>'
         else:
-            # Leave gaps or cases with one gap uncolored
             colored_line1 += a
             colored_line2 += b
     html += colored_line1 + "\n" + colored_line2 + "</div>"
@@ -564,9 +542,7 @@ def create_colored_alignment_html(seq1_aligned, seq2_aligned):
 
 
 def run_alignment(seq1, seq2, algorithm, mode, matrix, gap_open, gap_extend):
-    """Run sequence alignment"""
     try:
-        # Create temporary files with headers (needed for the pairs file)
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as seqlib_file:
             seqlib_file.write(f"1: {seq1}\n2: {seq2}\n")
             seqlib_path = seqlib_file.name
@@ -575,7 +551,6 @@ def run_alignment(seq1, seq2, algorithm, mode, matrix, gap_open, gap_extend):
             pairs_file.write("1 2\n")
             pairs_path = pairs_file.name
 
-        # Prepare alignment command
         cmd = [
             "java", "-jar", "/mnt/biocluster/praktikum/bioprakt/progprakt-02/Solution3/Alignment/alignment.jar",
             "--seqlib", seqlib_path,
@@ -591,7 +566,6 @@ def run_alignment(seq1, seq2, algorithm, mode, matrix, gap_open, gap_extend):
         if algorithm != "gotoh":
             cmd.append("--nw")
 
-        # Run alignment with universal_newlines instead of text
         process = subprocess.Popen(cmd,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
@@ -601,9 +575,6 @@ def run_alignment(seq1, seq2, algorithm, mode, matrix, gap_open, gap_extend):
         if process.returncode != 0:
             return {"error": f"Alignment failed: {stderr}"}
 
-        # Debug output
-
-        # Process results
         alignment_lines = stdout.split('\n')
         score = None
         alignment = []
@@ -612,7 +583,6 @@ def run_alignment(seq1, seq2, algorithm, mode, matrix, gap_open, gap_extend):
         backtrack_data = []
         in_backtrack = False
 
-        # Extract aligned sequences and matrix data
         for line in alignment_lines:
             if line.startswith('>'):
                 try:
@@ -632,24 +602,20 @@ def run_alignment(seq1, seq2, algorithm, mode, matrix, gap_open, gap_extend):
         if len(alignment) < 2:
             return {"error": "Invalid alignment output"}
 
-        # Strip header info from the aligned sequences
         def strip_header(aln_line):
             if ':' in aln_line:
                 return aln_line.split(':', 1)[1].strip()
             return aln_line.strip()
 
-        # Get the aligned sequences
         aligned_seq1 = strip_header(alignment[0])
         aligned_seq2 = strip_header(alignment[1])
 
-        # Calculate detailed statistics
         alignment_length = len(aligned_seq1)
         matches = sum(1 for a, b in zip(aligned_seq1, aligned_seq2) if a == b and a != '-')
         gaps = sum(1 for a, b in zip(aligned_seq1, aligned_seq2) if a == '-' or b == '-')
         mismatches = alignment_length - matches - gaps
         identity = (matches / alignment_length) * 100 if alignment_length > 0 else 0
-        
-        # Calculate additional metrics
+
         gap_openings = 0
         current_gap = False
         for a, b in zip(aligned_seq1, aligned_seq2):
@@ -665,7 +631,6 @@ def run_alignment(seq1, seq2, algorithm, mode, matrix, gap_open, gap_extend):
             if a != '-' and b != '-':
                 if a == b:
                     similarity += 1
-                # You could add more conditions here for similar amino acids
 
         similarity_percentage = (similarity / alignment_length) * 100 if alignment_length > 0 else 0
 
@@ -683,7 +648,6 @@ def run_alignment(seq1, seq2, algorithm, mode, matrix, gap_open, gap_extend):
             "Coverage": f"{(alignment_length / max(len(seq1), len(seq2))) * 100:.2f}%"
         }
 
-        # Create backtrack matrix visualization if data is available
         matrix_html = ""
         if backtrack_data:
             matrix_html = f"""
@@ -719,7 +683,6 @@ def run_alignment(seq1, seq2, algorithm, mode, matrix, gap_open, gap_extend):
         return {"error": f"Error during alignment: {str(e)}"}
 
     finally:
-        # Cleanup temporary files
         try:
             os.unlink(seqlib_path)
             os.unlink(pairs_path)
@@ -728,7 +691,6 @@ def run_alignment(seq1, seq2, algorithm, mode, matrix, gap_open, gap_extend):
 
 
 def get_sequence_from_database(db_type, db_id):
-    """Retrieve sequence from database based on database type and ID"""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -756,99 +718,86 @@ def get_sequence_from_database(db_type, db_id):
 
 
 def get_sequence_from_file(file_item):
-    """Read sequence from uploaded file"""
     if not file_item or not file_item.file:
         raise ValueError("No file uploaded")
 
     content = file_item.file.read().decode('utf-8')
-    # Remove any whitespace and newlines
     return ''.join(content.split())
 
 
 def print_backtrack_matrix(backtrack, seq1, seq2):
-    """Print the backtrack matrix with sequence headers"""
     if not backtrack:
         print("No backtrack matrix available")
         return
 
-    # Print the column headers (sequence 2)
     print("     ", end="")
     for char in seq2:
         print(f"{char:>4}", end="")
     print()
 
-    # Print each row with sequence 1 characters
     for i, row in enumerate(backtrack):
         if i == 0:
             print("  ", end="")
         else:
             print(f"{seq1[i - 1]} ", end="")
 
-        # Print the matrix values
         for value in row:
             print(f"{value:>4}", end="")
         print()
 
 
 def main():
-    """Main CGI handler"""
-    # Check if this is an AJAX request
     is_ajax = os.environ.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
 
     if is_ajax:
-        print("Content-Type: application/json")
-        print()
+            print("Content-Type: application/json")
+            print()
 
         form = cgi.FieldStorage()
 
         try:
-            # Get sequences based on source
-            seq1 = ""
-            seq2 = ""
+        seq1 = ""
+        seq2 = ""
 
-            # Handle first sequence
             seq1_source = form.getvalue("sequence1_source")
             if seq1_source == "database":
-                db_type1 = form.getvalue("db_type1")
-                db_id1 = form.getvalue("db_id1")
-                seq1 = get_sequence_from_database(db_type1, db_id1)
+            db_type1 = form.getvalue("db_type1")
+            db_id1 = form.getvalue("db_id1")
+            seq1 = get_sequence_from_database(db_type1, db_id1)
             elif seq1_source == "paste":
                 seq1 = form.getvalue("sequence1", "").strip()
             elif seq1_source == "upload" and "sequence1_file" in form:
-                seq1 = get_sequence_from_file(form["sequence1_file"])
+            seq1 = get_sequence_from_file(form["sequence1_file"])
 
-            # Handle second sequence
             seq2_source = form.getvalue("sequence2_source")
             if seq2_source == "database":
-                db_type2 = form.getvalue("db_type2")
-                db_id2 = form.getvalue("db_id2")
-                seq2 = get_sequence_from_database(db_type2, db_id2)
+            db_type2 = form.getvalue("db_type2")
+            db_id2 = form.getvalue("db_id2")
+            seq2 = get_sequence_from_database(db_type2, db_id2)
             elif seq2_source == "paste":
                 seq2 = form.getvalue("sequence2", "").strip()
             elif seq2_source == "upload" and "sequence2_file" in form:
-                seq2 = get_sequence_from_file(form["sequence2_file"])
+            seq2 = get_sequence_from_file(form["sequence2_file"])
 
-            if not seq1 or not seq2:
+        if not seq1 or not seq2:
                 print(json.dumps({"error": "Both sequences are required"}))
                 return
 
-            # Run alignment
-            result = run_alignment(
+        result = run_alignment(
                 seq1,
                 seq2,
                 form.getvalue("algorithm", "gotoh"),
                 form.getvalue("mode", "global"),
-                form.getvalue("matrix", "blosum62"),
-                float(form.getvalue("gap_open", -12)),
-                float(form.getvalue("gap_extend", -1))
-            )
+            form.getvalue("matrix", "blosum62"),
+            float(form.getvalue("gap_open", -12)),
+            float(form.getvalue("gap_extend", -1))
+        )
 
-            print(json.dumps(result))
+        print(json.dumps(result))
 
-        except Exception as e:
-            print(json.dumps({"error": str(e)}))
+    except Exception as e:
+        print(json.dumps({"error": str(e)}))
     else:
-        # Show HTML interface
         print("Content-Type: text/html")
         print()
         print(HTML_TEMPLATE)

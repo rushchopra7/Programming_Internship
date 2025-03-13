@@ -1,5 +1,3 @@
-import java.util.*;
-
 public class NW {
     private final String seq1;
     private final String seq2;
@@ -21,7 +19,6 @@ public class NW {
         double[][] dp = new double[m + 1][n + 1];
         int[][] backtrack = new int[m + 1][n + 1];
 
-        // Initialize first row and column with gap opening + extension
         for (int i = 0; i <= m; i++) {
             dp[i][0] = gapOpenPenalty + i * gapExtendPenalty;
             backtrack[i][0] = 1;  // Up
@@ -31,33 +28,28 @@ public class NW {
             backtrack[0][j] = 2;  // Left
         }
 
-        // Fill the matrix
         for (int i = 1; i <= m; i++) {
             for (int j = 1; j <= n; j++) {
                 double match = dp[i - 1][j - 1] + parentAlgorithm.getSubstitutionScore(seq1.charAt(i - 1), seq2.charAt(j - 1));
                 double delete = dp[i - 1][j] + gapExtendPenalty;
                 double insert = dp[i][j - 1] + gapExtendPenalty;
 
-                // Find the maximum score and set backtrack pointer
                 double maxScore = Double.NEGATIVE_INFINITY;
                 int backtrackDir = -1;
 
-                // Check vertical gap first (up)
                 if (delete >= maxScore) {
                     maxScore = delete;
-                    backtrackDir = 1;  // Up
+                    backtrackDir = 1;
                 }
 
-                // Check horizontal gap (left)
                 if (insert >= maxScore) {
                     maxScore = insert;
-                    backtrackDir = 2;  // Left
+                    backtrackDir = 2;
                 }
 
-                // Only use match/mismatch if it's strictly better than gaps
                 if (match > maxScore) {
                     maxScore = match;
-                    backtrackDir = 0;  // Diagonal
+                    backtrackDir = 0;
                 }
 
                 dp[i][j] = maxScore;
@@ -65,7 +57,6 @@ public class NW {
             }
         }
 
-        // Backtrack to get the alignment
         StringBuilder align1 = new StringBuilder();
         StringBuilder align2 = new StringBuilder();
         int i = m, j = n;
