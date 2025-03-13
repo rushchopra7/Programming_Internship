@@ -1,0 +1,10 @@
+CHIP-Sequencing(Chromatin immunoprecipitation(ChIP) in combination with sequencing) is a special technique widely used in Bioinformatics to identify and analyze DNA-binding sites for Transcription factors and other chromatin-associated proteins. The main steps include cross-linkage of protein and DNA using formaldehyde, fragmentation of chromatin, then utilizing an antibody to obtain the precipitated DNA and finally purifying the DNA(breaking the cross-link between protein and DNA) and sequencing it using sequencing techniques.
+RNA sequencing is a technique used to quantify RNA for studying gene expression, splicing, post-translational modifications, etc. In this, RNA is first converted into cDNA and then sequenced. 
+
+The cell type with the highest Antibodies is K562. (167)
+
+NFKB stands for "nuclear factor kappa light-chain-enhancer of activated B-cells":- it is a transcription factor involved in various cellular processes(DNA transcription, survival)
+
+Pol2 stands for RNA polymerase2 responsible for transcribing DNA into mRNA, snRNA, and microRNA
+
+H3K27me3 is a post-translational modification of a histone protein H3. It signifies the tri-methylation of Lysine 27 on H3.
